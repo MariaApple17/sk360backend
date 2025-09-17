@@ -1,4 +1,4 @@
-const queries = require('../models/queries');
+const queries = require('../../models/authentication/auth.model');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
@@ -10,10 +10,18 @@ exports.register = async (req, res) => {
 
     const hashed = await bcrypt.hash(password, 10);
     const id = await queries.createUser({ username, password: hashed, full_name, role_id });
-    res.json({ id });
-  } catch (err) { console.error(err); res.status(500).json({ error: 'Server error' }); }
-};
 
+    const token = jwt.sign({ id, role_id }, process.env.JWT_SECRET || 'secret', { expiresIn: '12h' });
+
+    res.json({
+      token,
+      user: { id, username, full_name, role_id }
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
 
 exports.login = async (req, res) => {
   try {
@@ -26,5 +34,8 @@ exports.login = async (req, res) => {
 
     const token = jwt.sign({ id: user.id, role_id: user.role_id }, process.env.JWT_SECRET || 'secret', { expiresIn: '12h' });
     res.json({ token, user: { id: user.id, username: user.username, full_name: user.full_name, role_id: user.role_id } });
-  } catch (err) { console.error(err); res.status(500).json({ error: 'Server error' }); }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
 };
