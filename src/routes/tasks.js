@@ -1,0 +1,10 @@
+const express = require('express');
+const router = express.Router();
+const tasks = require('../controllers/tasksController');
+const auth = require('../middleware/auth');
+const checkRole = require('../middleware/role');
+router.post('/', auth, checkRole(['Secretary','Chairman']), tasks.createTask);
+router.put('/:id', auth, checkRole(['Secretary','Chairman']), tasks.updateTask);
+router.get('/', auth, tasks.getTasks);
+router.delete('/:id', auth, checkRole(['Chairman']), tasks.deleteTask);
+module.exports = router;
